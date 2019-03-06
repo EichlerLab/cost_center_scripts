@@ -7,10 +7,13 @@ import sys
 import subprocess
 import re
 import glob
+import datetime
 
 
 
 
+# updated March 4, 2019 (DG) for new location, added log file, don't keep copy other than
+#   that in pacbio-aspera directory, and merge bam files.
 # David Gordon, July 25, 2018 with design by Katy Munson
 # To be run from aspera directory
 
@@ -23,8 +26,7 @@ import glob
 # start with #sample_name
 
 
-
-
+szLogFile = "/net/eichler/vol26/projects/sequencing/pacbio/backups/cost_center_log/log.txt"
 
 
 
@@ -40,11 +42,6 @@ import glob
 #       ccs_jobid (subdir)
 #       hgap_jobid (subdir)
 
-# the /net/eichler/pacbio/data structure is:
-# run_id
-#    cell
-#       tarball named runid_cell.tar.gz
-
 
 
 parser = argparse.ArgumentParser()
@@ -55,11 +52,11 @@ args = parser.parse_args()
 
 # should be running in an aspera directory
 # which looks like:
-# /net/eichler/pacbio/home/pacbio-aspera19
+# /net/eichler/vol26/projects/sequencing/pacbio/pacbio-aspera19
 
 szInitialDirectory = os.getcwd()
 
-szPattern = "/net/eichler/pacbio/home/pacbio-aspera"
+szPattern = "/net/eichler/vol26/projects/sequencing/pacbio/cost_center/pacbio-aspera"
 
 if ( not szInitialDirectory.startswith( szPattern ) ):
     sys.exit( "the current directory is " + szInitialDirectory + " but should be a path starting with " + szPattern )
@@ -126,11 +123,11 @@ for n in range( nStartIndex, len( aLines ) ):
 
     szCommand = "mkdir -p " + szSample
     print "about to execute: " + szCommand
-    subprocess.call( szCommand, shell = True )
+    subprocess.check_call( szCommand, shell = True )
 
     szCommand = "chgrp pacbio-aspera " + szSample
     print "about to execute: " + szCommand
-    subprocess.call( szCommand, shell = True )
+    subprocess.check_call( szCommand, shell = True )
 
 
 
@@ -144,53 +141,29 @@ for n in range( nStartIndex, len( aLines ) ):
     if ( not os.path.exists( szRawDataPath ) ):
         sys.exit( szRawDataPath + " doesn't exist, but it should if the run ID is really szRunID as indicated by this line in the manifest: " + aLines[n] )
 
-    szPacbioDataDir = "/net/eichler/pacbio/data/" + szRunID + "/" + szCellID
 
-    if ( not os.path.exists( szPacbioDataDir ) ):
-        szCommand = "mkdir -p " + szPacbioDataDir
-        subprocess.call( szCommand, shell = True )
+    szTarBall = szRunID + "_" + szCellID + ".tar.gz"
+    szTarBallFullPath = szAsperaSampleDir + "/" + szTarBall
 
-        szCommand = "chgrp pacbio-aspera " + szPacbioDataDir
-        print "about to execute: " + szCommand
-        subprocess.call( szCommand, shell = True )
-
-
-
-    # check that szPacbioDataDir is writable.  This has been a problem if some other
-    # user has created it and now we are adding additional analysis data.
-    if ( not os.access( szPacbioDataDir, os.W_OK) ):
-        sys.exit( "fatal error:  " + szPacbioDataDir + " is not writeable.  It must be to copy data there.  Find the owner of this directory and have them make it writeable." )
-
-
-    szTarBallFullPath = szPacbioDataDir + "/" + szRunID + "_" + szCellID + ".tar.gz"
-
-    if ( not os.path.exists( szTarBallFullPath ) ):
+    if ( not os.path.exists( szTarBall ) ):
         # must create tar ball and copy it
 
-        szCommand = "cd " + szRawDataPath + " && tar -cvf - * | gzip -c >" + szTarBallFullPath
+        szCommand = "set -o pipefail && cd " + szRawDataPath + " && tar -cvf - * | gzip -c >" + szTarBallFullPath
         print "about to execute: " + szCommand
-        subprocess.call( szCommand, shell = True )
+        subprocess.check_call( szCommand, shell = True )
 
-        szCommand = "chgrp pacbio-aspera " + szTarBallFullPath
+        szCommand = "chgrp pacbio-aspera " + szTarBall
         print "about to execute: " + szCommand
-        subprocess.call( szCommand, shell = True )
+        subprocess.check_call( szCommand, shell = True )
 
-
-
-        # this also puts the tarball in the current directory (which is
-        # sample under the aspera directory)
-        szCommand = "ln " + szTarBallFullPath
+        szCommand = "md5sum " +  szTarBall + " >" + szTarBall + ".md5"
         print "about to execute: " + szCommand
-        subprocess.call( szCommand, shell = True )
-
-        szTarBallNotFullPath =  szRunID + "_" + szCellID + ".tar.gz"
-
-        szCommand = "md5sum " +  szTarBallNotFullPath + " >" + szTarBallNotFullPath + ".md5"
-        print "about to execute: " + szCommand
-        subprocess.call( szCommand, shell = True )
+        subprocess.check_call( szCommand, shell = True )
 
     else:
-        print szTarBallFullPath + " exists so no need to create it again or copy to the aspera directory"
+        # Melanie prefers this *not* be a fatal error--she wants the script to
+        # keep running.  This would occur when additional analysis is performed/distributed.
+        print szTarBall + " exists so no need to create it again or copy to the aspera directory"
 
     if ( szJobID != "" ):
         # must copy analysis files to aspera directory
@@ -218,11 +191,11 @@ for n in range( nStartIndex, len( aLines ) ):
 
             szCommand = "mkdir -p " + szMultiplexSampleName
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             szCommand = "chgrp pacbio-aspera " + szMultiplexSampleName
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             
             os.chdir( szMultiplexSampleName )
@@ -234,11 +207,11 @@ for n in range( nStartIndex, len( aLines ) ):
             szJobIDDir = "CCS_" + szJobID
             szCommand = "mkdir -p " + szJobIDDir
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             szCommand = "chgrp pacbio-aspera " + szJobIDDir
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
 
             os.chdir( szJobIDDir )
@@ -246,29 +219,29 @@ for n in range( nStartIndex, len( aLines ) ):
             szFullPathToCopy=szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_ccsset-1/file.consensusreadset.xml"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
             
             # the "*" is necessary in some cases since smrtlink can
             # add additional text if it thinks there is a barcode
             
-            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbcoretools.tasks.bam2fasta_ccs-0/ccs*.fasta"
+            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbcoretools.tasks.bam2fasta_ccs-0/ccs*.fasta*"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
-            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbcoretools.tasks.bam2fastq_ccs-0/ccs*.fastq"
+            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbcoretools.tasks.bam2fastq_ccs-0/ccs*.fastq*"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             szFullPathToCopy = szSmrtLinkDir + "/tasks/pbreports.tasks.ccs_report-0/ccs_report.json"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             szCommand = "chgrp pacbio-aspera *"
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             
              
@@ -277,37 +250,43 @@ for n in range( nStartIndex, len( aLines ) ):
             szJobIDDir = "HGAP_" + szJobID
             szCommand = "mkdir -p " + szJobIDDir
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
 
             szCommand = "chgrp pacbio-aspera " + szJobIDDir
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
 
             szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.fasta"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.fasta.fai"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.xml"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_fastq-1/file.fastq"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
 
             szCommand = "chgrp pacbio-aspera *"
             print "about to execute: " + szCommand
-            subprocess.call( szCommand, shell = True )
+            subprocess.check_call( szCommand, shell = True )
+
+            # added March 4, 2019 to add bam files
+
+            szCommand = "find " + szSmrtLinkDir + " -name \"ccs.bam\" -exec samtools merge ccs.bam {} +"
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
 
         else:
             sys.exit( "line " + aLines[n] + " has the CCSorHGAP as " + szCCSorHGAP + " but it should be either CCS or HGAP" )
@@ -316,9 +295,37 @@ for n in range( nStartIndex, len( aLines ) ):
 
     szCommand = "chmod -R g+wx " + szAsperaSampleDir
     print "about to execute: " + szCommand
-    subprocess.call( szCommand, shell = True )
+    subprocess.check_call( szCommand, shell = True )
 
 
+# logging information for the purpose of automatic deletion later
+
+# how big is the data
+
+szCommand = "du -s *"
+print "about to execute: " + szCommand
+szOutput = subprocess.check_output( szCommand, shell = True )
+
+aWords = szOutput.split()
+# looks like:
+# > du -s .
+# 32      .
+
+nSize = int( aWords[0] )
+
+today = datetime.datetime.today()
+
+szFormat = "%Y-%m-%d %H:%M:%S"
+szToday = today.strftime( szFormat )
+
+szToPrint = "created: " + szToday + " size (kb): " + str( nSize ) + " " + szInitialDirectory
+
+with open( "CREATED", "w" ) as fCreated:
+    fCreated.write( szToPrint + "\n" )
+
+
+with open( szLogFile, "a" ) as fLogFile:
+    fLogFile.write( szToPrint + "\n" )
             
 
 
