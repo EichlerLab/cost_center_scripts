@@ -125,9 +125,9 @@ for n in range( nStartIndex, len( aLines ) ):
     print "about to execute: " + szCommand
     subprocess.check_call( szCommand, shell = True )
 
-    szCommand = "chgrp pacbio-aspera " + szSample
-    print "about to execute: " + szCommand
-    subprocess.check_call( szCommand, shell = True )
+    # szCommand = "chgrp pacbio-aspera " + szSample
+    # print "about to execute: " + szCommand
+    # subprocess.check_call( szCommand, shell = True )
 
 
 
@@ -152,9 +152,9 @@ for n in range( nStartIndex, len( aLines ) ):
         print "about to execute: " + szCommand
         subprocess.check_call( szCommand, shell = True )
 
-        szCommand = "chgrp pacbio-aspera " + szTarBall
-        print "about to execute: " + szCommand
-        subprocess.check_call( szCommand, shell = True )
+        # szCommand = "chgrp pacbio-aspera " + szTarBall
+        # print "about to execute: " + szCommand
+        # subprocess.check_call( szCommand, shell = True )
 
         szCommand = "md5sum " +  szTarBall + " >" + szTarBall + ".md5"
         print "about to execute: " + szCommand
@@ -209,9 +209,9 @@ for n in range( nStartIndex, len( aLines ) ):
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
 
-            szCommand = "chgrp pacbio-aspera " + szJobIDDir
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+            # szCommand = "chgrp pacbio-aspera " + szJobIDDir
+            # print "about to execute: " + szCommand
+            # subprocess.check_call( szCommand, shell = True )
 
 
             os.chdir( szJobIDDir )
@@ -239,10 +239,20 @@ for n in range( nStartIndex, len( aLines ) ):
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
 
-            szCommand = "chgrp pacbio-aspera *"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+            # szCommand = "chgrp pacbio-aspera *"
+            # print "about to execute: " + szCommand
+            # subprocess.check_call( szCommand, shell = True )
 
+            # added March 4, 2019 to add bam files, then
+            # modified on March 14, 2019 to handle case of ccs.bam
+            # already existing
+
+            if ( os.path.exists( "ccs.bam" ) ):
+                print "ccs.bam already exists so not recreating it"
+            else:
+                szCommand = "find " + szSmrtLinkDir + " -name \"ccs.bam\" -exec samtools merge ccs.bam {} +"
+                print "about to execute: " + szCommand
+                subprocess.check_call( szCommand, shell = True )
             
              
         elif( szCCSorHGAP == "HGAP" ):
@@ -253,9 +263,9 @@ for n in range( nStartIndex, len( aLines ) ):
             subprocess.check_call( szCommand, shell = True )
 
 
-            szCommand = "chgrp pacbio-aspera " + szJobIDDir
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+            # szCommand = "chgrp pacbio-aspera " + szJobIDDir
+            # print "about to execute: " + szCommand
+            # subprocess.check_call( szCommand, shell = True )
 
 
             szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.fasta"
@@ -278,15 +288,10 @@ for n in range( nStartIndex, len( aLines ) ):
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
 
-            szCommand = "chgrp pacbio-aspera *"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+            # szCommand = "chgrp pacbio-aspera *"
+            # print "about to execute: " + szCommand
+            # subprocess.check_call( szCommand, shell = True )
 
-            # added March 4, 2019 to add bam files
-
-            szCommand = "find " + szSmrtLinkDir + " -name \"ccs.bam\" -exec samtools merge ccs.bam {} +"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
 
         else:
             sys.exit( "line " + aLines[n] + " has the CCSorHGAP as " + szCCSorHGAP + " but it should be either CCS or HGAP" )
@@ -320,13 +325,25 @@ szToday = today.strftime( szFormat )
 
 szToPrint = "created: " + szToday + " size (kb): " + str( nSize ) + " " + szInitialDirectory
 
-with open( "CREATED", "w" ) as fCreated:
+os.chdir( szInitialDirectory )
+
+
+
+
+# append since the user might run this multiple times on the same pacbio-aspera directory
+with open( "CREATED", "a" ) as fCreated:
     fCreated.write( szToPrint + "\n" )
 
 
 with open( szLogFile, "a" ) as fLogFile:
     fLogFile.write( szToPrint + "\n" )
             
+
+# allows Katy/Melanie to overwrite/delete each others'
+szCommand = "chgrp -R pacbio-aspera *"
+print "about to execute: " + szCommand
+subprocess.check_call( szCommand, shell = True )
+
 
 
 print "Have a nice day!"
