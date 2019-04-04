@@ -241,8 +241,22 @@ for n in range( nStartIndex, len( aLines ) ):
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
 
+
+            # gzip fasta file (added 4/2019 DG)
+
+            szCommand = "gzip ccs*.fasta"
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
+
+
             szFullPathToCopy = szSmrtLinkDir + "/tasks/pbcoretools.tasks.bam2fastq_ccs-0/ccs*.fastq*"
             szCommand = "cp -v " + szFullPathToCopy + " ."
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
+
+            # gzip fastq file (added 4/2019 DG)
+
+            szCommand = "gzip ccs*.fastq"
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
 
@@ -279,11 +293,24 @@ for n in range( nStartIndex, len( aLines ) ):
             # print "about to execute: " + szCommand
             # subprocess.check_call( szCommand, shell = True )
 
+            # fix DG 4/2019 this was missing:
+
+            os.chdir( szJobIDDir )
 
             szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.fasta"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
+
+
+
+            # gzip fasta file (added 4/2019 DG)
+
+            szCommand = "gzip file.contigset.fasta"
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
+
+
 
             szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.fasta.fai"
             szCommand = "cp -v " + szFullPathToCopy + " ."
@@ -299,6 +326,15 @@ for n in range( nStartIndex, len( aLines ) ):
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
+
+            # gzip fastq file (added 4/2019 DG)
+
+            szCommand = "gzip file.fastq"
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
+
+
+
 
             # szCommand = "chgrp pacbio-aspera *"
             # print "about to execute: " + szCommand
