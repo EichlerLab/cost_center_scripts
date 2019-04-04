@@ -99,6 +99,18 @@ for n in range( nStartIndex, len( aLines ) ):
     szRunID = aWords[1]
     szCellID = aWords[2]
 
+
+    # added Apr 4, 2019 to handle case in which there are extra tabs inserted in the manifest
+
+    print "szSample = " + szSample + " szRunID = " + szRunID + " szCellID = " + szCellID
+
+    if ( szRunID == "" ):
+        sys.exit( "the run id is empty on this line of the manifest:\n" + aLines[n] + "\nThis might be due to extra tabs on this line" )
+
+    if ( szCellID == "" ):
+        sys.exit( "the cell id is empty on this line of the manifest:\n" + aLines[n] + "\nThis might be due to extra tabs on this line" )
+
+
     if ( len( aWords ) >= 4 ):
         szCCSorHGAP = aWords[3].upper()
     else:
