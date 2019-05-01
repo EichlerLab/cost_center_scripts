@@ -242,11 +242,11 @@ for n in range( nStartIndex, len( aLines ) ):
             subprocess.check_call( szCommand, shell = True )
 
 
-            # gzip fasta file (added 4/2019 DG)
+            # gzip fasta file (added 4/2019 DG, and removed again 5/2019 since ccs*.fasta doesn't exist for newer datasets which instead have ccs*.fasta.zip which causes the script to fail
 
-            szCommand = "gzip ccs*.fasta"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+            #szCommand = "gzip ccs*.fasta"
+            #print "about to execute: " + szCommand
+            #subprocess.check_call( szCommand, shell = True )
 
 
             szFullPathToCopy = szSmrtLinkDir + "/tasks/pbcoretools.tasks.bam2fastq_ccs-0/ccs*.fastq*"
@@ -254,11 +254,11 @@ for n in range( nStartIndex, len( aLines ) ):
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
 
-            # gzip fastq file (added 4/2019 DG)
+            # gzip fastq file (added 4/2019 DG) and removed again 5/2019 since ccs*.fastq doesn't exist for newer datasets which instead have ccs*.fastq.zip which causes this script to fail
 
-            szCommand = "gzip ccs*.fastq"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+            #szCommand = "gzip ccs*.fastq"
+            #print "about to execute: " + szCommand
+            #subprocess.check_call( szCommand, shell = True )
 
             szFullPathToCopy = szSmrtLinkDir + "/tasks/pbreports.tasks.ccs_report-0/ccs_report.json"
             szCommand = "cp -v " + szFullPathToCopy + " ."
