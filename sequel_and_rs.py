@@ -148,7 +148,7 @@ for n in range( nStartIndex, len( aLines ) ):
     szAsperaSampleDir = os.getcwd()
 
 
-    szRawDataPath = "/net/eichler/vol24/projects/sequencing/pacbio/backups/smrtlink_data/" + szRunID + "/" + szCellID
+    szRawDataPath = "/net/eichler/vol26/projects/sequencing/pacbio/backups/smrtlink_data/" + szRunID + "/" + szCellID
 
     if ( not os.path.exists( szRawDataPath ) ):
         sys.exit( szRawDataPath + " doesn't exist, but it should if the run ID is really szRunID as indicated by this line in the manifest: " + aLines[n] )
@@ -184,7 +184,7 @@ for n in range( nStartIndex, len( aLines ) ):
 
         # changed from 000 to 00* per Melanie Sep 2018 since the smrt analysis
         # software will sometimes use 001 instead of 000
-        szSmrtLinkRoot = "/net/eichler/vol24/projects/sequencing/pacbio/smrt-link/userdata/jobs_root/00*/"
+        szSmrtLinkRoot = "/net/eichler/vol26/projects/sequencing/pacbio/smrt-link/userdata/jobs_root/00*/"
 
         szSmrtLinkDir = szSmrtLinkRoot + szJobID
 
