@@ -345,7 +345,7 @@ for n in range( nStartIndex, len( aLines ) ):
             sys.exit( "line " + aLines[n] + " has the CCSorHGAP as " + szCCSorHGAP + " but it should be either CCS or HGAP" )
 
     # now make the aspera data so that others in the lab can delete it
-    szCommand = "chgrp -R pacbio-aspera szAsperaSampleDir"        
+    szCommand = "chgrp -R pacbio-aspera " + szAsperaSampleDir
     print "about to execute: " + szCommand
     subprocess.check_call( szCommand, shell = True )
 
