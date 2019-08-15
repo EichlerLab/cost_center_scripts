@@ -344,21 +344,6 @@ for n in range( nStartIndex, len( aLines ) ):
         else:
             sys.exit( "line " + aLines[n] + " has the CCSorHGAP as " + szCCSorHGAP + " but it should be either CCS or HGAP" )
 
-    # now make the aspera data so that others in the lab can delete it
-    szCommand = "chgrp -R pacbio-aspera " + szAsperaSampleDir
-    print "about to execute: " + szCommand
-    subprocess.check_call( szCommand, shell = True )
-
-    szCommand = "chmod -R g+wx " + szAsperaSampleDir
-    print "about to execute: " + szCommand
-    subprocess.check_call( szCommand, shell = True )
-
-    # set the sticky bit so that any subdirectory created by anyone will
-    # be created with group pacbio-aspera
-    szCommand = "find . -type d -print0 | xargs -0 chmod g+s"
-    print "about to execute: " + szCommand
-    subprocess.check_call( szCommand, shell = True )
-
 
 
 # logging information for the purpose of automatic deletion later
@@ -386,6 +371,22 @@ szToPrint = "created: " + szToday + " size (kb): " + str( nSize ) + " " + szInit
 os.chdir( szInitialDirectory )
 
 
+# now make the aspera data so that others in the lab can delete it
+szCommand = "chgrp -R pacbio-aspera " + szInitialDirectory + "/*"
+print "about to execute: " + szCommand
+subprocess.check_call( szCommand, shell = True )
+
+szCommand = "chmod -R g+wx "  + szInitialDirectory + "/*"
+print "about to execute: " + szCommand
+subprocess.check_call( szCommand, shell = True )
+
+# set the sticky bit so that any subdirectory created by anyone will
+# be created with group pacbio-aspera
+szCommand = "find " + szInitialDirectory + " -type d -print0 | xargs -0 chmod g+s"
+print "about to execute: " + szCommand
+subprocess.check_call( szCommand, shell = True )
+
+
 
 
 # append since the user might run this multiple times on the same pacbio-aspera directory
@@ -396,11 +397,6 @@ with open( "CREATED", "a" ) as fCreated:
 with open( szLogFile, "a" ) as fLogFile:
     fLogFile.write( szToPrint + "\n" )
             
-
-# allows Katy/Melanie to overwrite/delete each others'
-szCommand = "chgrp -R pacbio-aspera *"
-print "about to execute: " + szCommand
-subprocess.check_call( szCommand, shell = True )
 
 
 
