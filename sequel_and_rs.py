@@ -228,39 +228,21 @@ for n in range( nStartIndex, len( aLines ) ):
 
             os.chdir( szJobIDDir )
 
-            szFullPathToCopy=szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_ccsset-1/file.consensusreadset.xml"
-            szCommand = "cp -v " + szFullPathToCopy + " ."
+            # was prior to 7.0 upgrade
+            #szFullPathToCopy=szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_ccsset-1/file.consensusreadset.xml"
+            # now (DG, Aug 19, 2019):
+            szFullPathToCopy=szSmrtLinkDir + "/tasks/pbcoretools.tasks.auto_ccs_outputs-0/*.fast?"
+            szCommand = "cp " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
             
-            # the "*" is necessary in some cases since smrtlink can
-            # add additional text if it thinks there is a barcode
+            szCommand = "gzip -f *.fast?"
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
             
-            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbcoretools.tasks.bam2fasta_ccs-0/ccs*.fasta*"
-            szCommand = "cp -v " + szFullPathToCopy + " ."
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+                                               
 
-
-            # gzip fasta file (added 4/2019 DG, and removed again 5/2019 since ccs*.fasta doesn't exist for newer datasets which instead have ccs*.fasta.zip which causes the script to fail
-
-            #szCommand = "gzip ccs*.fasta"
-            #print "about to execute: " + szCommand
-            #subprocess.check_call( szCommand, shell = True )
-
-
-            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbcoretools.tasks.bam2fastq_ccs-0/ccs*.fastq*"
-            szCommand = "cp -v " + szFullPathToCopy + " ."
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-            # gzip fastq file (added 4/2019 DG) and removed again 5/2019 since ccs*.fastq doesn't exist for newer datasets which instead have ccs*.fastq.zip which causes this script to fail
-
-            #szCommand = "gzip ccs*.fastq"
-            #print "about to execute: " + szCommand
-            #subprocess.check_call( szCommand, shell = True )
-
-            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbreports.tasks.ccs_report-0/ccs_report.json"
+            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbreports.tasks.ccs2_report-0/ccs_report.json"
             szCommand = "cp -v " + szFullPathToCopy + " ."
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
@@ -273,12 +255,12 @@ for n in range( nStartIndex, len( aLines ) ):
             # modified on March 14, 2019 to handle case of ccs.bam
             # already existing
 
-            if ( os.path.exists( "ccs.bam" ) ):
-                print "ccs.bam already exists so not recreating it"
-            else:
-                szCommand = "find " + szSmrtLinkDir + " -name \"ccs.bam\" -exec samtools merge ccs.bam {} +"
-                print "about to execute: " + szCommand
-                subprocess.check_call( szCommand, shell = True )
+            # change for update 7.0
+
+            szCommand = "cp " + szSmrtLinkDir + "/tasks/pbcoretools.tasks.auto_ccs_outputs-0/*.ccs.bam* ."
+
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
             
              
         elif( szCCSorHGAP == "HGAP" ):
@@ -374,11 +356,14 @@ os.chdir( szInitialDirectory )
 # now make the aspera data so that others in the lab can delete it
 szCommand = "chgrp -R pacbio-aspera " + szInitialDirectory + "/*"
 print "about to execute: " + szCommand
-subprocess.check_call( szCommand, shell = True )
+# sometimes someone else leaves a subdirectory and chgrp will fail on those
+#subprocess.check_call( szCommand, shell = True )
+subprocess.call( szCommand, shell = True )
 
 szCommand = "chmod -R g+wx "  + szInitialDirectory + "/*"
 print "about to execute: " + szCommand
-subprocess.check_call( szCommand, shell = True )
+#subprocess.check_call( szCommand, shell = True )
+subprocess.call( szCommand, shell = True )
 
 # set the sticky bit so that any subdirectory created by anyone will
 # be created with group pacbio-aspera
