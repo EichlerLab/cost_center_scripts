@@ -56,14 +56,18 @@ args = parser.parse_args()
 
 szInitialDirectory = os.getcwd()
 
-szPattern = "/net/eichler/vol26/projects/sequencing/pacbio/cost_center/pacbio-aspera"
 
-if ( not szInitialDirectory.startswith( szPattern ) ):
-    sys.exit( "the current directory is " + szInitialDirectory + " but should be a path starting with " + szPattern )
 
-szAsperaNumber = re.sub( szPattern, "", szInitialDirectory )
-if ( not szAsperaNumber.isdigit() ):
-    sys.exit( "the current directory is " + szInitialDirectory + " but should be a path starting with " + szPattern + " and ending with a number but instead it ends with " + szAsperaNumber  )
+# removed June 23, 2020 to allow this to be run from any directory structure
+#szPattern = "/net/eichler/vol26/projects/sequencing/pacbio/cost_center/pacbio-aspera"
+
+
+# if ( not szInitialDirectory.startswith( szPattern ) ):
+#     sys.exit( "the current directory is " + szInitialDirectory + " but should be a path starting with " + szPattern )
+
+# szAsperaNumber = re.sub( szPattern, "", szInitialDirectory )
+# if ( not szAsperaNumber.isdigit() ):
+#     sys.exit( "the current directory is " + szInitialDirectory + " but should be a path starting with " + szPattern + " and ending with a number but instead it ends with " + szAsperaNumber  )
 
 szManifest = "manifest.tab"
 
@@ -182,11 +186,28 @@ for n in range( nStartIndex, len( aLines ) ):
         # per Katy ( July 2018), analysis files are NOT to be saved to
         # /net/eichler/pacbio/data.  They can be recreated if necessary.
 
-        # changed from 000 to 00* per Melanie Sep 2018 since the smrt analysis
-        # software will sometimes use 001 instead of 000
-        szSmrtLinkRoot = "/net/eichler/vol26/projects/sequencing/pacbio/smrt-link/userdata/jobs_root/00*/"
+        
+        # per Katy June 2020:
 
-        szSmrtLinkDir = szSmrtLinkRoot + szJobID
+        # SMRT Link job folders now have a different structure: e.g.
+        # /net/eichler/vol26/projects/sequencing/pacbio/nobackups/smrtlink_job_data/0000/0000005/0000005512/
+        # So the first part is the same, but once you hit the
+        # `smrtlink_job_data` folder, there are additional levels of folders: if
+        # you pad the job ID to 10 digits with 0's, the first folder is the
+        # first 4 digits, the second level is the first 7 digits, the actual job
+        # folder is all 10 digits.
+
+        szJobID10 = szJobID.zfill( 10 )
+
+        szJobIDPart1 = szJobID10[0:4]
+        szJobIDPart2 = szJobID10[0:7]
+
+
+
+        szSmrtLinkRoot = "/net/eichler/vol26/projects/sequencing/pacbio/smrt-link/userdata/jobs_root/"
+
+        szSmrtLinkDir = szSmrtLinkRoot + szJobIDPart1 + "/" + szJobIDPart2 + "/" + szJobID10
+
 
         aTestArray = glob.glob( szSmrtLinkDir )
         
@@ -231,8 +252,9 @@ for n in range( nStartIndex, len( aLines ) ):
             # was prior to 7.0 upgrade
             #szFullPathToCopy=szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_ccsset-1/file.consensusreadset.xml"
             # now (DG, Aug 19, 2019):
-            szFullPathToCopy=szSmrtLinkDir + "/tasks/pbcoretools.tasks.auto_ccs_outputs-0/*.fast?"
-            szCommand = "cp " + szFullPathToCopy + " ."
+            # copying all files except for *.xml
+
+            szCommand = "ls " + szSmrtLinkDir + "/outputs/* | grep -v '.xml$' | xargs -I@ sh -c 'cp @ .'"
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
             
@@ -242,10 +264,10 @@ for n in range( nStartIndex, len( aLines ) ):
             
                                                
 
-            szFullPathToCopy = szSmrtLinkDir + "/tasks/pbreports.tasks.ccs2_report-0/ccs_report.json"
-            szCommand = "cp -v " + szFullPathToCopy + " ."
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+            # szFullPathToCopy = szSmrtLinkDir + "/tasks/pbreports.tasks.ccs2_report-0/ccs_report.json"
+            # szCommand = "cp -v " + szFullPathToCopy + " ."
+            # print "about to execute: " + szCommand
+            # subprocess.check_call( szCommand, shell = True )
 
             # szCommand = "chgrp pacbio-aspera *"
             # print "about to execute: " + szCommand
@@ -257,12 +279,30 @@ for n in range( nStartIndex, len( aLines ) ):
 
             # change for update 7.0
 
-            szCommand = "cp " + szSmrtLinkDir + "/tasks/pbcoretools.tasks.auto_ccs_outputs-0/*.ccs.bam* ."
+            # szCommand = "cp " + szSmrtLinkDir + "/tasks/pbcoretools.tasks.auto_ccs_outputs-0/*.ccs.bam* ."
 
+            # print "about to execute: " + szCommand
+            # subprocess.check_call( szCommand, shell = True )
+
+        elif( szCCSorHGAP == "ASM" ):
+            szJobIDDir = "ASM_" + szJobID
+            szCommand = "mkdir -p " + szJobIDDir
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
+
+
+            os.chdir( szJobIDDir )
+
+            # copying all files except for *.xml
+
+            szCommand = "ls " + szSmrtLinkDir + "/outputs/* | grep -v '.xml$' | xargs -I@ sh -c 'cp @ .'"
             print "about to execute: " + szCommand
             subprocess.check_call( szCommand, shell = True )
             
-             
+            szCommand = "gzip -f *.fast?"
+            print "about to execute: " + szCommand
+            subprocess.check_call( szCommand, shell = True )
+            
         elif( szCCSorHGAP == "HGAP" ):
             
             szJobIDDir = "HGAP_" + szJobID
