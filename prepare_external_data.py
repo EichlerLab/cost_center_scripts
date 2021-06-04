@@ -12,6 +12,7 @@ import datetime
 
 
 
+# updated June 4, 2021 (DG) for vol26->vol28 and changed name to prepare_external_data.py
 # updated March 4, 2019 (DG) for new location, added log file, don't keep copy other than
 #   that in pacbio-aspera directory, and merge bam files.
 # David Gordon, July 25, 2018 with design by Katy Munson
@@ -26,7 +27,7 @@ import datetime
 # start with #sample_name
 
 
-szLogFile = "/net/eichler/vol26/projects/sequencing/pacbio/backups/cost_center_log/log.txt"
+szLogFile = "/net/eichler/vol28/projects/sequencing/pacbio/backups/cost_center_log/log.txt"
 
 
 
@@ -152,7 +153,7 @@ for n in range( nStartIndex, len( aLines ) ):
     szAsperaSampleDir = os.getcwd()
 
 
-    szRawDataPath = "/net/eichler/vol26/projects/sequencing/pacbio/backups/smrtlink_data/" + szRunID + "/" + szCellID
+    szRawDataPath = "/net/eichler/vol28/projects/sequencing/pacbio/backups/smrtlink_data/" + szRunID + "/" + szCellID
 
     if ( not os.path.exists( szRawDataPath ) ):
         sys.exit( szRawDataPath + " doesn't exist, but it should if the run ID is really szRunID as indicated by this line in the manifest: " + aLines[n] )
@@ -204,7 +205,7 @@ for n in range( nStartIndex, len( aLines ) ):
 
 
 
-        szSmrtLinkRoot = "/net/eichler/vol26/projects/sequencing/pacbio/smrt-link/userdata/jobs_root/"
+        szSmrtLinkRoot = "/net/eichler/vol28/projects/sequencing/pacbio/smrt-link/userdata/jobs_root/"
 
         szSmrtLinkDir = szSmrtLinkRoot + szJobIDPart1 + "/" + szJobIDPart2 + "/" + szJobID10
 
