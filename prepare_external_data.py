@@ -133,6 +133,8 @@ for n in range( nStartIndex, len( aLines ) ):
     else:
         szMultiplexSampleName = ""
 
+    szFolderToStore = szCCSorHGAP + "_" + szJobID
+
 
     # create sample directory in aspera directory
 
@@ -235,138 +237,27 @@ for n in range( nStartIndex, len( aLines ) ):
             os.chdir( szMultiplexSampleName )
 
 
+        szCommand = "mkdir -p " + szFolderToStore
+        print "about to execute: " + szCommand
+        subprocess.check_call( szCommand, shell = True )
 
-        if ( szCCSorHGAP == "CCS" ):
-
-            szJobIDDir = "CCS_" + szJobID
-            szCommand = "mkdir -p " + szJobIDDir
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-            # szCommand = "chgrp pacbio-aspera " + szJobIDDir
-            # print "about to execute: " + szCommand
-            # subprocess.check_call( szCommand, shell = True )
+        # szCommand = "chgrp pacbio-aspera " + szJobIDDir
+        # print "about to execute: " + szCommand
+        # subprocess.check_call( szCommand, shell = True )
 
 
-            os.chdir( szJobIDDir )
+        os.chdir( szFolderToStore )
 
-            # was prior to 7.0 upgrade
-            #szFullPathToCopy=szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_ccsset-1/file.consensusreadset.xml"
-            # now (DG, Aug 19, 2019):
-            # copying all files except for *.xml
+        # was prior to 7.0 upgrade
+        #szFullPathToCopy=szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_ccsset-1/file.consensusreadset.xml"
+        # now (DG, Aug 19, 2019):
+        # copying all files except for *.xml
+        # include *.xml per Katy (DG, June 4, 2021)
 
-            szCommand = "ls " + szSmrtLinkDir + "/outputs/* | grep -v '.xml$' | xargs -I@ sh -c 'cp @ .'"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
+        szCommand = "ls " + szSmrtLinkDir + "/outputs/* | xargs -I@ sh -c 'cp @ .'"
+        print "about to execute: " + szCommand
+        subprocess.check_call( szCommand, shell = True )
             
-            szCommand = "gzip -f *.fast?"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-            
-                                               
-
-            # szFullPathToCopy = szSmrtLinkDir + "/tasks/pbreports.tasks.ccs2_report-0/ccs_report.json"
-            # szCommand = "cp -v " + szFullPathToCopy + " ."
-            # print "about to execute: " + szCommand
-            # subprocess.check_call( szCommand, shell = True )
-
-            # szCommand = "chgrp pacbio-aspera *"
-            # print "about to execute: " + szCommand
-            # subprocess.check_call( szCommand, shell = True )
-
-            # added March 4, 2019 to add bam files, then
-            # modified on March 14, 2019 to handle case of ccs.bam
-            # already existing
-
-            # change for update 7.0
-
-            # szCommand = "cp " + szSmrtLinkDir + "/tasks/pbcoretools.tasks.auto_ccs_outputs-0/*.ccs.bam* ."
-
-            # print "about to execute: " + szCommand
-            # subprocess.check_call( szCommand, shell = True )
-
-        elif( szCCSorHGAP == "ASM" ):
-            szJobIDDir = "ASM_" + szJobID
-            szCommand = "mkdir -p " + szJobIDDir
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-
-            os.chdir( szJobIDDir )
-
-            # copying all files except for *.xml
-
-            szCommand = "ls " + szSmrtLinkDir + "/outputs/* | grep -v '.xml$' | xargs -I@ sh -c 'cp @ .'"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-            
-            szCommand = "gzip -f *.fast?"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-            
-        elif( szCCSorHGAP == "HGAP" ):
-            
-            szJobIDDir = "HGAP_" + szJobID
-            szCommand = "mkdir -p " + szJobIDDir
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-
-            # szCommand = "chgrp pacbio-aspera " + szJobIDDir
-            # print "about to execute: " + szCommand
-            # subprocess.check_call( szCommand, shell = True )
-
-            # fix DG 4/2019 this was missing:
-
-            os.chdir( szJobIDDir )
-
-            szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.fasta"
-            szCommand = "cp -v " + szFullPathToCopy + " ."
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-
-
-            # gzip fasta file (added 4/2019 DG)
-
-            szCommand = "gzip file.contigset.fasta"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-
-
-            szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.fasta.fai"
-            szCommand = "cp -v " + szFullPathToCopy + " ."
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-            szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_contigset-1/file.contigset.xml"
-            szCommand = "cp -v " + szFullPathToCopy + " ."
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-            szFullPathToCopy= szSmrtLinkDir + "/tasks/pbcoretools.tasks.gather_fastq-1/file.fastq"
-            szCommand = "cp -v " + szFullPathToCopy + " ."
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-            # gzip fastq file (added 4/2019 DG)
-
-            szCommand = "gzip file.fastq"
-            print "about to execute: " + szCommand
-            subprocess.check_call( szCommand, shell = True )
-
-
-
-
-            # szCommand = "chgrp pacbio-aspera *"
-            # print "about to execute: " + szCommand
-            # subprocess.check_call( szCommand, shell = True )
-
-
-        else:
-            sys.exit( "line " + aLines[n] + " has the CCSorHGAP as " + szCCSorHGAP + " but it should be either CCS or HGAP" )
-
 
 
 # logging information for the purpose of automatic deletion later
